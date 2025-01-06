@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <td>Asin</td>
+                <td>Author</td>
+                <td>Title</td>
+                <td>Published Date</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="b : ${books}" th:object="${b}">
+                <td> 
+                    <a th:href="@{/books/{asin}(asin=*{asin})}">
+                        <span th:text="*{asin}"></span>
+                    </a>
+                </td>
+                <td> <span th:text="*{author}"></span></td>
+                <td> <span th:text="*{title}"></span></td>
+                <td> <span th:text="*{publishedDate}"></span></td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/}">Back</a>
+</body>
+</html>

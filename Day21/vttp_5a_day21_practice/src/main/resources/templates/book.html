@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Asin</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Sold By</th>
+                <th>Image Url</th>
+                <th>Product Url</th>
+                <th>Stars</th>
+                <th>Reviews</th>
+                <th>Price</th>
+                <th>Published Date</th>
+                <th>Category Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:object="${book}">
+                <td><span th:text="*{asin}"></span></td>
+                <td><span th:text="*{title}"></span></td>
+                <td><span th:text="*{author}"></span></td>
+                <td><span th:text="*{soldBy}"></span></td>
+                <td><span th:text="*{imageUrl}"></span></td>
+                <td><span th:text="*{productUrl}"></span></td>
+                <td><span th:text="*{stars}"></span></td>
+                <td><span th:text="*{reviews}"></span></td>
+                <td><span th:text="*{price}"></span></td>
+                <td><span th:text="*{publishedDate}"></span></td>
+                <td><span th:text="*{categoryName}"></span></td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/books}">Back</a>
+</body>
+</html>
