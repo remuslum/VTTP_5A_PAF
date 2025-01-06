@@ -1,6 +1,7 @@
 package sg.nus.edu.iss.vttp_5a_day21_practice.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class BookService {
         return bookRepo.getBooks(author, limit);
     }
 
-    public Book getBook(String asin){
+    public Optional<Book> getBook(String asin){
         return bookRepo.getBook(asin);
     }
 }

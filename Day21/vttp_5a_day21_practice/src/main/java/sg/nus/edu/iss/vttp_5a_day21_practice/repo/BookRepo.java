@@ -2,6 +2,7 @@ package sg.nus.edu.iss.vttp_5a_day21_practice.repo;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +19,11 @@ public class BookRepo {
     private JdbcTemplate jdbcTemplate;
 
     public List<Book> getBooks(String author, int limit){
-        String authorWithPercent = new StringBuilder().append("%").append(author).append("%").toString();
+        // Another way to do it: 
+        // String s = "%%%s%%".formatted(author)
+        String authorWithPercent = "%%%s%%".formatted(author);
+
+        // String authorWithPercent = new StringBuilder().append("%").append(author).append("%").toString();
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(Queries.QUERY_STRING, authorWithPercent, limit);
         List<Book> bookList = new LinkedList<>();
         while(rowSet.next()){
@@ -27,13 +32,12 @@ public class BookRepo {
         return bookList;
     }
 
-    public Book getBook(String asin){
+    public Optional<Book> getBook(String asin){
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(Queries.QUERY_BOOK_STRING, asin);
-        List<Book> bookList = new LinkedList<>();
-        while(rowSet.next()){
-            bookList.add(Book.createBook(rowSet));
-        }
-        return bookList.get(0);
+        if (!rowSet.next()){
+            return Optional.empty();
+        } 
+        return Optional.of(Book.createBook(rowSet));
     }
     
 }

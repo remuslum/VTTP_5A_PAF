@@ -6,28 +6,14 @@
     <title>Document</title>
 </head>
 <body>
-    <table>
-        <thead>
-            <tr>
-                <td>Asin</td>
-                <td>Author</td>
-                <td>Title</td>
-                <td>Published Date</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="b : ${books}" th:object="${b}">
-                <td> 
-                    <a th:href="@{/books/{asin}(asin=*{asin})}">
-                        <span th:text="*{asin}"></span>
-                    </a>
-                </td>
-                <td> <span th:text="*{author}"></span></td>
-                <td> <span th:text="*{title}"></span></td>
-                <td> <span th:text="*{publishedDate}"></span></td>
-            </tr>
-        </tbody>
-    </table>
+    <ol th:each="b : ${books}" th:object="${b}">
+        <li>
+            <a th:href="@{/books/{asin}(asin=*{asin})}">
+                <span th:text="*{title}"></span>
+            </a>
+        </li>
+
+    </ol>
     <a th:href="@{/}">Back</a>
 </body>
 </html>
