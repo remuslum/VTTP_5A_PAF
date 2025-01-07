@@ -1,5 +1,7 @@
 package sg.nus.edu.iss.vttp_5a_day22_workshop.controller;
 
+import java.awt.PageAttributes;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.components.JSONEventParser;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.model.Event;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.service.RSVPService;
@@ -63,12 +66,54 @@ public class RSVPRestController {
 
     @PostMapping(path="/rsvp", consumes=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addEvent(@RequestBody String event){
-        if(rsvpService.addEvent(event)){
+        JsonObject jsonObject = Json.createReader(new StringReader(event)).readObject();
+        Optional<Integer> id = Optional.ofNullable(jsonObject.getInt("id"));
+        boolean isAdded = id
+        .map(
+            (value) -> {
+                return rsvpService.addAndReplaceEvent(jsonObject);
+            }
+        )
+        .orElseGet(
+            () -> {
+                return rsvpService.addEvent(jsonObject);
+            }
+        );
+        
+        if(isAdded){
+            // URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
+            // .pathSegment("/rsvp")
+            // .queryParam("q", event)
+            // .build()
+            // .toUri();
+            // return ResponseEntity.created(uri).body("Added successfully");
             return ResponseEntity.status(HttpStatusCode.valueOf(201)).body("Added successfully");
         } else {
             return ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Unsuccessful, please try again");
         }
     }
 
+    // @PutMapping(path="/rsvp/{email}", produces=MediaType.APPLICATION_JSON_VALUE)
+    // public ResponseEntity<String> updateEmail(@PathVariable String variable){
+    //     boolean isAdded = rsvpService.updateDate(variable);
+    //     if(isAdded){
+    //         return ResponseEntity.status(HttpStatusCode.valueOf(201)).body("Successfully updated");
+    //     } else {
+    //         return ResponseEntity.badRequest().body("Unable to update");
+    //     }
+    // }
+
+    @GetMapping(path="/rsvp/count", produces=MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getTotalCount(){
+        Optional<Integer> count = rsvpService.getTotalCount();
+        ResponseEntity<String> response = count
+        .map((value) -> {
+            return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(value.toString());
+        })
+        .orElseGet(() -> {
+            return ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Not found");
+        });
+        return response;
+    }
 
 }

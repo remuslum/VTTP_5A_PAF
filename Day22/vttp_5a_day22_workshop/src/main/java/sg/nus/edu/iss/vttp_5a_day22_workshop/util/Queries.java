@@ -13,13 +13,23 @@ public class Queries {
 
     public static final String QUERY_TO_INSERT =
         """
-           replace into guests (name, email, phone, confirmation_date, comments)
-           values (?,?,?,?,?); 
+           insert into guests (email, phone, confirmation_date, comments)
+           values (?,?,?,?); 
         """;
 
     public static final String QUERY_TO_INSERT_WITH_ID =
-    """
-        replace into guests (id,name, email, phone, confirmation_date, comments)
-        values (?,?,?,?,?,?); 
-    """;
+        """
+            replace into guests (guest_id, name, email, phone, confirmation_date, comments)
+            values (?,?,?,?,?,?); 
+        """;
+
+    // public static final String QUERY_TO_UPDATE =
+    //     """
+    //         update guests set email = ? where id = ?;
+    //     """;
+
+    public static final String QUERY_TOTAL_COUNT = 
+        """
+            select count(*) as total_count from guests;
+        """;
 }

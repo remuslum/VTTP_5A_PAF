@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.json.JsonObject;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.model.Event;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.repo.RSVPRepo;
 
@@ -23,7 +24,19 @@ public class RSVPService {
         return rsvpRepo.getEvent(name);
     }
 
-    public boolean addEvent(String jsonString){
-        return rsvpRepo.addEvent(jsonString);
+    public boolean addEvent(JsonObject jsonObject){
+        return rsvpRepo.addEvent(jsonObject);
+    }
+
+    public boolean addAndReplaceEvent(JsonObject jsonObject){
+        return rsvpRepo.addAndReplaceEvent(jsonObject);
+    }
+
+    // public boolean updateDate(String variable){
+    //     return rsvpRepo.updateDate(variable);
+    // }
+
+    public Optional<Integer> getTotalCount(){
+        return rsvpRepo.getTotalCount();
     }
 }
