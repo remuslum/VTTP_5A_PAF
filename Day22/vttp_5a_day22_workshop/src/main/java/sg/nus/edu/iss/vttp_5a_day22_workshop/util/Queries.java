@@ -23,10 +23,11 @@ public class Queries {
             values (?,?,?,?,?,?); 
         """;
 
-    // public static final String QUERY_TO_UPDATE =
-    //     """
-    //         update guests set email = ? where id = ?;
-    //     """;
+    public static final String QUERY_TO_UPDATE =
+        """
+            update guests set name = ?, email = ?, phone = ?, confirmation_date = ?, comments = ?
+            where email = ?;
+        """;
 
     public static final String QUERY_TOTAL_COUNT = 
         """

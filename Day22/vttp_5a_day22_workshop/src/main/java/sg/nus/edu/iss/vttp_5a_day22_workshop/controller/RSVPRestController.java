@@ -1,73 +1,59 @@
 package sg.nus.edu.iss.vttp_5a_day22_workshop.controller;
 
-import java.awt.PageAttributes;
 import java.io.StringReader;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
-import sg.nus.edu.iss.vttp_5a_day22_workshop.components.JSONEventParser;
-import sg.nus.edu.iss.vttp_5a_day22_workshop.model.Event;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.service.RSVPService;
 
 @RestController
 @RequestMapping("/api")
 public class RSVPRestController {
-    
+
     @Autowired
     RSVPService rsvpService;
 
-    @Autowired
-    JSONEventParser jsonEventParser;
 
     @GetMapping(path="/rsvps", produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getAllEvents(){
-        Optional<List<Event>> rsvpList = rsvpService.getAllEvents();
-        ResponseEntity<String> response = rsvpList
-        .map(events -> {
-            JsonArrayBuilder eventsJson = Json.createArrayBuilder();
-            events.forEach(e -> eventsJson.add(jsonEventParser.convertEventToJson(e)));
-            return ResponseEntity.ok().body(eventsJson.build().toString());
-        })
-        .orElseGet(() -> {
-            String body = "{\"message\": \"unsuccessful loading of RSVP\"}";
-            return ResponseEntity.badRequest().body(body);
-        });
-        return response;
+        JsonArray rsvpList = rsvpService.getAllEvents();
+
+        // If the list is a jsonarray, we return a 201 else a 404
+        if(rsvpList.isEmpty()){
+            return ResponseEntity.badRequest().body(rsvpList.toString());
+        } else {
+            return ResponseEntity.ok().body(rsvpList.toString());
+        }
     }
 
     @GetMapping(path="/rsvp", produces=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getEvent(@RequestParam String q){
-        Optional<Event> event = rsvpService.getEvent(q);
-        ResponseEntity<String> response = event
-        .map((value) -> {
-            String body = jsonEventParser.convertEventToJson(value).toString();
-            return ResponseEntity.ok().body(body);
-        })
-        .orElseGet(() -> {
-            String body = "{\"message\": \"unable to find guest\"}";
-            return ResponseEntity.badRequest().body(body);
-        });
-        return response;
+    public ResponseEntity<JsonObject> getEvent(@RequestParam String q){
+        JsonObject eventObject = rsvpService.getEvent(q);
+        int status = eventObject.containsKey("error_message") ? 404 : 201;
+        return ResponseEntity.status(status).body(eventObject);
     }
 
     @PostMapping(path="/rsvp", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addEvent(@RequestBody String event){
+    public ResponseEntity<Map<String, String>> addEvent(@RequestBody String event){
         JsonObject jsonObject = Json.createReader(new StringReader(event)).readObject();
-        Optional<Integer> id = Optional.ofNullable(jsonObject.getInt("id"));
+        Optional<Integer> id = jsonObject.containsKey("guest_id") ? Optional.of(jsonObject.getInt("guest_id")) : Optional.empty();
+
         boolean isAdded = id
         .map(
             (value) -> {
@@ -80,40 +66,47 @@ public class RSVPRestController {
             }
         );
         
-        if(isAdded){
-            // URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-            // .pathSegment("/rsvp")
-            // .queryParam("q", event)
-            // .build()
-            // .toUri();
-            // return ResponseEntity.created(uri).body("Added successfully");
-            return ResponseEntity.status(HttpStatusCode.valueOf(201)).body("Added successfully");
+        int status;
+        Map<String, String> output = new HashMap<>();
+        if(!isAdded){
+            output.put("message", "POST operation is unsuccessful");
+            status = 404;
         } else {
-            return ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Unsuccessful, please try again");
+            output.put("message", "POST operation successful");
+            status = 201;
+        }
+        return ResponseEntity.status(status).body(output);
+    }
+
+    @PutMapping(path="/rsvp/{email}", produces="application/json")
+    public ResponseEntity<Map<String, String>> updateRSVP(@PathVariable String email, @RequestBody String event){
+        JsonObject eventJSON = Json.createReader(new StringReader(event)).readObject();
+        boolean isUpdated = rsvpService.updateData(eventJSON, email);
+        Map<String, String> output = new HashMap<>();
+        if(isUpdated){
+            output.put("message", "Update successful");
+            return ResponseEntity.ok().body(output);
+        } else {
+            output.put("error_message","Unsuccessful operation");
+            return ResponseEntity.badRequest().body(output);
         }
     }
 
-    // @PutMapping(path="/rsvp/{email}", produces=MediaType.APPLICATION_JSON_VALUE)
-    // public ResponseEntity<String> updateEmail(@PathVariable String variable){
-    //     boolean isAdded = rsvpService.updateDate(variable);
-    //     if(isAdded){
-    //         return ResponseEntity.status(HttpStatusCode.valueOf(201)).body("Successfully updated");
-    //     } else {
-    //         return ResponseEntity.badRequest().body("Unable to update");
-    //     }
-    // }
-
     @GetMapping(path="/rsvp/count", produces=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getTotalCount(){
+    public ResponseEntity<Map<String, String>> getTotalCount(){
         Optional<Integer> count = rsvpService.getTotalCount();
-        ResponseEntity<String> response = count
-        .map((value) -> {
-            return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(value.toString());
-        })
-        .orElseGet(() -> {
-            return ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Not found");
+        Map<String, String> output = new HashMap<>();
+
+        count.ifPresentOrElse((value) -> {
+            output.put("total_events", String.valueOf(value));
+        },
+        () -> {
+            output.put("error_message", "Operation unsuccessful");
         });
-        return response;
+
+        int status = output.containsKey("total_events") ? 201 : 404;
+        return ResponseEntity.status(status).body(output);
+        
     }
 
 }

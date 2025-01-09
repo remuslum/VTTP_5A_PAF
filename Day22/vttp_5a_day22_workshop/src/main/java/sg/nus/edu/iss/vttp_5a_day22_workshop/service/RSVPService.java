@@ -6,22 +6,43 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
+import sg.nus.edu.iss.vttp_5a_day22_workshop.components.JSONEventParser;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.model.Event;
 import sg.nus.edu.iss.vttp_5a_day22_workshop.repo.RSVPRepo;
 
 @Service
 public class RSVPService {
     
+    private final JsonObject errorObject = Json.createObjectBuilder().add("error_message","Unsucessful loading of RSVP").build();
+
     @Autowired
     RSVPRepo rsvpRepo;
 
-    public Optional<List<Event>> getAllEvents(){
-        return rsvpRepo.getAllEvents();
+    @Autowired
+    JSONEventParser jsonEventParser;
+
+    public JsonArray getAllEvents(){
+        Optional<List<Event>> rsvpListOptional = rsvpRepo.getAllEvents();
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        // map and orElseGet can only be used if the return types are the same class
+        return rsvpListOptional
+        .map((value) -> {
+            value.forEach(v -> arrayBuilder.add(jsonEventParser.convertEventToJson(v)));
+            return arrayBuilder.build();
+        })
+        .orElseGet(() -> arrayBuilder.build());
     }
 
-    public Optional<Event> getEvent(String name){
-        return rsvpRepo.getEvent(name);
+    public JsonObject getEvent(String name){
+        Optional<Event> event = rsvpRepo.getEvent(name);
+
+        return event
+        .map((value) -> jsonEventParser.convertEventToJson(value))
+        .orElseGet(() -> errorObject);
     }
 
     public boolean addEvent(JsonObject jsonObject){
@@ -32,9 +53,9 @@ public class RSVPService {
         return rsvpRepo.addAndReplaceEvent(jsonObject);
     }
 
-    // public boolean updateDate(String variable){
-    //     return rsvpRepo.updateDate(variable);
-    // }
+    public boolean updateData(JsonObject jsonObject, String email){
+        return rsvpRepo.updateRSVP(jsonObject, email);
+    }
 
     public Optional<Integer> getTotalCount(){
         return rsvpRepo.getTotalCount();

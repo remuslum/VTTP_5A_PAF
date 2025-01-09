@@ -56,10 +56,12 @@ public class RSVPRepo {
         return added > 0;
     }
 
-    // public boolean updateDate(String variable){
-    //     int added = jdbcTemplate.update(Queries.QUERY_TO_UPDATE, variable);
-    //     return added > 0;
-    // }
+    public boolean updateRSVP(JsonObject jsonObject, String email){
+        int added = jdbcTemplate.update(Queries.QUERY_TO_UPDATE, jsonObject.getString("name"),
+        jsonObject.getString("email"), jsonObject.getString("phone"), jsonObject.getString("confirmDate"),
+        jsonObject.getString("comments"), email);
+        return added > 0;
+    }
 
     public Optional<Integer> getTotalCount(){
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(Queries.QUERY_TOTAL_COUNT);
