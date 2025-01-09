@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
-import sg.nus.edu.iss.vttp_5a_day21_workshop.JSON.JsonParser;
+import jakarta.json.JsonObject;
+import sg.nus.edu.iss.vttp_5a_day21_workshop.JSON.JsonParserCustomer;
 import sg.nus.edu.iss.vttp_5a_day21_workshop.model.Customer;
 import sg.nus.edu.iss.vttp_5a_day21_workshop.repo.CustomerRepo;
 import sg.nus.edu.iss.vttp_5a_day21_workshop.util.DefaultValues;
@@ -19,22 +20,26 @@ public class CustomerService {
     CustomerRepo customerRepo;
 
     @Autowired
-    JsonParser jsonParser;
+    JsonParserCustomer jsonParser;
 
     public JsonArray getCustomerList(Optional<String> limitOptional, Optional<String> offsetOptional){
         int limit = limitOptional
-        .map((value) -> {
-            return Integer.valueOf(value);
-        })
+        .map((value) -> Integer.valueOf(value))
         .orElseGet(() -> DefaultValues.LIMIT.getValue());
 
         int offset = offsetOptional
-        .map((value) -> {
-            return Integer.valueOf(value);
-        })
+        .map((value) -> Integer.valueOf(value))
         .orElseGet(() -> DefaultValues.OFFSET.getValue());
         
         return getCustomerListHelper(limit, offset);
+    }
+
+    public JsonObject getCustomer(String id){
+        Optional<Customer> customer = customerRepo.getCustomer(id);
+        JsonObject customerJson = customer
+        .map((value) -> jsonParser.convertCustomerToJSON(value))
+        .orElseGet(() -> Json.createObjectBuilder().build());
+        return customerJson;
     }
     
     private JsonArray getCustomerListHelper(int limit, int offset){
@@ -42,11 +47,7 @@ public class CustomerService {
 
         // If list is empty, return an empty Json Array
         return customers
-        .map((value) -> {
-            return jsonParser.convertCustomerListToJSON(value);
-        })
-        .orElseGet(() -> {
-            return Json.createArrayBuilder().build();
-        });
+        .map((value) -> jsonParser.convertCustomerListToJSON(value))
+        .orElseGet(() -> Json.createArrayBuilder().build());
     }
 }

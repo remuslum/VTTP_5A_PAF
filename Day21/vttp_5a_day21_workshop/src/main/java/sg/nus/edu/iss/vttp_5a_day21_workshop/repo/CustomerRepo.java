@@ -29,6 +29,12 @@ public class CustomerRepo {
         return customerList.isEmpty() ? Optional.empty() : Optional.of(customerList);
     }
 
+    public Optional<Customer> getCustomer(String id){
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(Queries.QUERY_TO_GET_CUSTOMER, id);
+
+        return rowSet.next() ? Optional.of(Customer.createCustomer(rowSet)) : Optional.empty();
+    }
+
     //Default value for limit is 5 and offset is 0
     
 }

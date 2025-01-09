@@ -11,7 +11,7 @@ import jakarta.json.JsonObject;
 import sg.nus.edu.iss.vttp_5a_day21_workshop.model.Customer;
 
 @Component
-public class JsonParser {
+public class JsonParserCustomer {
     
     public JsonObject convertCustomerToJSON(Customer customer){
         JsonObject jsonObject = Json.createObjectBuilder().add("id", customer.getId()).add("company", customer.getCompany())
@@ -25,5 +25,7 @@ public class JsonParser {
         customers.forEach(c -> jsonArray.add(convertCustomerToJSON(c)));
         return jsonArray.build();
     }
+
+    
 
 }
