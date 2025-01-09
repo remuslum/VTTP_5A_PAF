@@ -1,6 +1,8 @@
 package vttp.batch5.paf.day23.controller;
 
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.json.Json;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.servlet.http.HttpSession;
 import vttp.batch5.paf.day23.service.ShoppingCartService;
@@ -23,8 +24,9 @@ public class ShoppingCartController {
     @Autowired
     ShoppingCartService shoppingCartService;
     
-    @PutMapping("/purchaseorder")
-    public ResponseEntity<String> checkCartOut(@RequestBody String cart, HttpSession httpSession){
+    @PutMapping(path="/purchaseorder", produces="application/json")
+    public ResponseEntity<Map<String, String>> checkCartOut(@RequestBody String cart, HttpSession httpSession){
+        // Check if a cart has already been created, if not initialise cartID
         Optional<Integer> cartId = Optional.ofNullable((Integer) httpSession.getAttribute("cartId"));
         int cartIdInt = cartId
         .map((value) -> {
@@ -35,27 +37,17 @@ public class ShoppingCartController {
             httpSession.setAttribute("cartId", 1);
             return (Integer) httpSession.getAttribute("cartId");
         });
-
-        JsonObject jsonObject = Json.createReader(new StringReader(cart)).readObject();
-        boolean isCheckoutAdded = shoppingCartService.addCheckout(cartIdInt, jsonObject.getString("name"), 
-        jsonObject.getString("deliveryDate"));
         
-        boolean isPersonAdded = shoppingCartService.addPerson(jsonObject.getString("name"), 
-        jsonObject.getString("address"), cartIdInt);
+        JsonObject cartItems = Json.createReader(new StringReader(cart)).readObject();
+        boolean isAdded = shoppingCartService.addData(cartIdInt, cartItems);
         
-        JsonArray itemArray = jsonObject.getJsonArray("lineItems");
-        boolean isCartAdded = false;
-        for(int i = 0; i < itemArray.size(); i++){
-            JsonObject item = itemArray.getJsonObject(i);
-            isCartAdded = shoppingCartService.addItemToCart(item.getString("name"), item.getInt("quantity"), 
-            item.getJsonNumber("unitPrice").doubleValue(), cartIdInt);
-        }
-        
-        
-        if(isPersonAdded && isCartAdded && isCheckoutAdded){
-            return ResponseEntity.status(HttpStatusCode.valueOf(201)).body("Successfully Added");
+        Map<String, String> response = new HashMap<>();
+        if(isAdded){
+            response.put("message", "Successfully added");
+            return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(response);
         } else {
-            return ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Unsuccessful");
+            response.put("message", "Unsuccessful");
+            return ResponseEntity.status(HttpStatusCode.valueOf(404)).body(response);
         }
     }
 }

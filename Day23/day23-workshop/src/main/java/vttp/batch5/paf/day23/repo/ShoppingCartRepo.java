@@ -26,14 +26,4 @@ public class ShoppingCartRepo {
         int added = jdbcTemplate.update(Queries.QUERY_TO_ADD_ITEM_TO_CART, name, quantity, unitPrice, checkoutId);
         return added > 0;
     }
-
-    // public boolean updatePersonCheckOutId(String name, int checkoutId){
-    //     int added = jdbcTemplate.update(Queries.QUERY_TO_UPDATE_CHECKOUT_ID_PERSON, checkoutId, name);
-    //     return added > 0;
-    // }
-
-    // public boolean updateCartCheckOutId(String name, int checkoutId){
-    //     int added = jdbcTemplate.update(Queries.QUERY_TO_UPDATE_CHECKOUT_ID_CART, checkoutId, name);
-    //     return added > 0;
-    // }
 }
