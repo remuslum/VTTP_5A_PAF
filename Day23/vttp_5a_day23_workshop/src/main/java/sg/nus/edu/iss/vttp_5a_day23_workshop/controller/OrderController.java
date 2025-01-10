@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import sg.nus.edu.iss.vttp_5a_day23_workshop.service.OrderService;
 
@@ -22,10 +21,9 @@ public class OrderController {
     @GetMapping(path="/total/{order_id}", produces="application/json")
     public ResponseEntity<String> getOrderDetails(@PathVariable String order_id){
         JsonObject orderObject = orderService.getOrder(order_id);        
-        if(orderObject.isEmpty()){
+        if(orderObject.containsKey("error_message")){
             // JsonObject output = Json.createObjectBuilder().add("error_message", "Unable to retrieve order").build();
-            JsonObject errorObject = Json.createObjectBuilder().add("error_message", Json.createValue("Unable to retrieve order")).build();
-            return new ResponseEntity<>(errorObject.toString(), HttpStatusCode.valueOf(404));
+            return new ResponseEntity<>(orderObject.toString(), HttpStatusCode.valueOf(404));
         } else {
 
             return new ResponseEntity<>(orderObject.toString(), HttpStatusCode.valueOf(200));

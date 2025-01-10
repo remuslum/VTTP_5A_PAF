@@ -24,6 +24,6 @@ public class OrderService {
         Optional<Order> orderOptional = orderRepo.getOrder(orderId);
         return orderOptional
         .map((value) -> jsonParserOrder.convertOrderToJson(value))
-        .orElseGet(() -> Json.createObjectBuilder().build());
+        .orElseGet(() -> Json.createObjectBuilder().add("error_message", "Unable to retrieve order").build());
     }
 }
