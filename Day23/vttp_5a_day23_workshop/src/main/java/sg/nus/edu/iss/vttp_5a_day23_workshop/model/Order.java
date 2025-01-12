@@ -65,8 +65,8 @@ public class Order {
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
             .orElse(""));
         order.setCustomerId(Optional.ofNullable(rowSet.getInt("customer_id")).orElse(-1));
-        order.setTotalPrice(rowSet.getFloat("total_price"));
-        order.setCostPrice(rowSet.getFloat("cost_price"));
+        order.setTotalPrice(rowSet.getFloat("total_sum"));
+        order.setCostPrice(rowSet.getFloat("total_cost"));
         return order;
     }
 }

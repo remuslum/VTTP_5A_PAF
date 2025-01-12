@@ -14,8 +14,8 @@ public class JsonParserOrder {
         JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
         
         jsonObjectBuilder.add("id", order.getId()).add("order_date", order.getOrderDate())
-        .add("customer_id", order.getCustomerId()).add("total_price", order.getTotalPrice())
-        .add("cost_price", order.getCostPrice());
+        .add("customer_id", order.getCustomerId()).add("total_sum", order.getTotalPrice())
+        .add("total_cost", order.getCostPrice());
 
         return jsonObjectBuilder.build();
     }
