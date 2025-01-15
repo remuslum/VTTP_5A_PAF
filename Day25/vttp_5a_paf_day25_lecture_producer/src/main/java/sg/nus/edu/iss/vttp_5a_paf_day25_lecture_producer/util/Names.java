@@ -8,5 +8,7 @@ public class Names{
     public static final String TODOTOPIC = "todotopic";
     public static final String STUDENTTOPIC = "studenttopic";
     public static final String ORDERTOPIC = "ordertopic";
+
+    public static final String STRINGTEMPLATE = "string";
 }
 

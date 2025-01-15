@@ -7,6 +7,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.model.Order;
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.model.Student;
@@ -107,6 +108,16 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean(Names.STRINGTEMPLATE)
+        public RedisTemplate<String, String> redisTemplateString(RedisConnectionFactory connFac){
+            RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+
+            redisTemplate.setConnectionFactory(connFac);
+            redisTemplate.setDefaultSerializer(new StringRedisSerializer());
+            redisTemplate.afterPropertiesSet();
+
+            return redisTemplate;
+    }
 
     
 }

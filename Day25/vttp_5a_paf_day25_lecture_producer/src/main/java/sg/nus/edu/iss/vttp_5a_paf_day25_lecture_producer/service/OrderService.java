@@ -13,13 +13,22 @@ import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.util.Names;
 public class OrderService {
     
     @Autowired
-    private RedisTemplate<String, Order> redisTemplate;
+    @Qualifier(Names.ORDERTEMPLATE)
+    private RedisTemplate<String, Order> redisTemplateOrder;
+
+    @Autowired
+    @Qualifier(Names.STRINGTEMPLATE)
+    private RedisTemplate<String, String> redisTemplateString;
 
     @Autowired
     @Qualifier(Names.ORDERTOPIC)
     private ChannelTopic channelTopic;
 
     public long publish(Order order){
-        return redisTemplate.convertAndSend(channelTopic.getTopic(), order);
+        return redisTemplateOrder.convertAndSend(channelTopic.getTopic(), order);
+    }
+
+    public long publish(String string){
+        return redisTemplateString.convertAndSend(channelTopic.getTopic(), string);
     }
 }
