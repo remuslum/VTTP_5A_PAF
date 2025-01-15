@@ -48,9 +48,10 @@ public class ProducerController {
         return new ResponseEntity<>("Message sent", HttpStatus.OK);
     }
 
-    @PostMapping("/orders")
+    @PostMapping("/order")
     public ResponseEntity<String> sendOrder(@RequestBody Order order){
         long numClients = orderService.publish(order);
+        System.out.println(order);
         System.out.println(numClients);
         if(numClients < 1){
             return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
