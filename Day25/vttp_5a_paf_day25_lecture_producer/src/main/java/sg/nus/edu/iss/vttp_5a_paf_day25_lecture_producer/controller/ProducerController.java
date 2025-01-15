@@ -12,7 +12,7 @@ import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.model.Order;
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.model.Student;
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.model.Todo;
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.service.OrderService;
-import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.service.ProducerService;
+import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.service.ToDoService;
 import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.service.StudentService;
 
 @RestController
@@ -20,7 +20,7 @@ import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_producer.service.StudentService;
 public class ProducerController {
     
     @Autowired
-    private ProducerService producerService;
+    private ToDoService toDoService;
 
     @Autowired
     private StudentService studentService;
@@ -28,21 +28,33 @@ public class ProducerController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/todo")
     public ResponseEntity<String> sendMessage(@RequestBody Todo todo){
-        producerService.sendMessage(todo);
+        long numClients = toDoService.sendMessage(todo);
+        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>("Message sent", HttpStatus.OK);
     }
 
     @PostMapping("/student")
     public ResponseEntity<String> sendMessage(@RequestBody Student student){
-        studentService.sendMessage(student);
+        long numClients = studentService.sendMessage(student);
+        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>("Message sent", HttpStatus.OK);
     }
 
     @PostMapping("/orders")
     public ResponseEntity<String> sendOrder(@RequestBody Order order){
-        orderService.publish(order);
+        long numClients = orderService.publish(order);
+        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>("Message sent", HttpStatus.OK);
     }
 }
