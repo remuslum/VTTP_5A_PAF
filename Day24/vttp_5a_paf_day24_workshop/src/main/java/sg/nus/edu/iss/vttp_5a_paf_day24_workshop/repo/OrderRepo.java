@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.Order;
+import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.OrderDetails;
 import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.util.Queries;
 
 @Repository
@@ -23,7 +24,7 @@ public class OrderRepo {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         PreparedStatementCreator psc = (Connection con) -> {
             PreparedStatement ps = con.prepareStatement(Queries.QUERY_TO_INSERT_INTO_ORDERS, new String[]{"id"});
-            ps.setDate(1, order.getOrderDate());
+            // ps.setDate(1, order.getOrderDate());
             ps.setString(2, order.getCustomerName());
             ps.setString(3, order.getShipAddress());
             ps.setString(4, order.getNotes());
@@ -33,5 +34,12 @@ public class OrderRepo {
         jdbcTemplate.update(psc, keyHolder);
         int orderId = keyHolder.getKey().intValue();
         return orderId;
+    }
+
+    public boolean addOrderAndOrderDetails(Order order, OrderDetails orderDetails){
+        int orderId = insertOrder(order);
+        return jdbcTemplate.update(Queries.QUERY_TO_INSERT_INTO_ORDER_DETAILS, orderDetails.getProduct(),
+        orderDetails.getUnitPrice(), orderDetails.getDiscount(), orderDetails.getQuantity(),
+        orderId) > 0;
     }
 }
