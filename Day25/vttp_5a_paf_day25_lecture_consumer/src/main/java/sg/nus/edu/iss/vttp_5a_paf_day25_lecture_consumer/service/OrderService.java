@@ -16,6 +16,7 @@ public class OrderService implements MessageListener{
             String orderData = new String(message.getBody());
             System.out.println(orderData);
 
+
             // using Json-P to map it back to object
             // call the API in day 24 using RestTemplate to write to MySQL database
 

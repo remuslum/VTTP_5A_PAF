@@ -19,6 +19,6 @@ public class Student {
     private String name;
 
     @JsonDeserialize(using=LocalDateDeserializer.class)
-    @JsonFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(pattern="dd-MM-yyyy")
     private LocalDate dateOfBirth;
 }

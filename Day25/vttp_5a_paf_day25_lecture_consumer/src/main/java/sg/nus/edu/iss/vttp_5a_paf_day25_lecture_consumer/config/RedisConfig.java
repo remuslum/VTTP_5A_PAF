@@ -1,11 +1,9 @@
 package sg.nus.edu.iss.vttp_5a_paf_day25_lecture_consumer.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -24,6 +22,11 @@ import sg.nus.edu.iss.vttp_5a_paf_day25_lecture_consumer.util.Names;
 
 @Configuration
 public class RedisConfig {
+
+    /*
+     * RedisTemplate is not required for listening
+     * The required components are RedisMessageListenerContainer and MessageListenerAdapter
+     */
     
     @Value("${redis.topic1}")
     private String redisTopic1;
@@ -34,17 +37,10 @@ public class RedisConfig {
     @Value("${redis.topic3}")
     private String redisTopic3;
 
-
-    @Bean(Names.TODO)
-    public RedisTemplate<String, Todo> redisTemplate(RedisConnectionFactory connFac, 
-    Jackson2JsonRedisSerializer<Todo> serializer){
-        RedisTemplate<String, Todo> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connFac);
-        redisTemplate.setDefaultSerializer(serializer);
-        redisTemplate.afterPropertiesSet();
-
-        return redisTemplate;
-    }
+    /*
+     * Initialisation of JacksonSerializer for all 3 topics
+     * Todo, Student and Order
+     */
 
     @Bean
     public Jackson2JsonRedisSerializer<Todo> jackson2JsonRedisSerializer(){
@@ -61,81 +57,67 @@ public class RedisConfig {
         return new Jackson2JsonRedisSerializer<>(Order.class);
     }
 
-    @Bean
-    public RedisMessageListenerContainer listenerContainer(@Qualifier(Names.TODOQUALIFIER) MessageListenerAdapter messageListenerAdapter,
-    RedisConnectionFactory connFac){
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connFac);
-        container.addMessageListener(messageListenerAdapter, new PatternTopic(redisTopic1));
+    /*
+     * Creation of 3 Channel Topics based on the topics provided
+     */
 
-        return container;
+    @Bean(Names.TODOTOPIC)
+    public ChannelTopic topicToDo() {
+        return new ChannelTopic(redisTopic1);
     }
 
-    @Bean(Names.TODOQUALIFIER)
+    @Bean(Names.STUDENTTOPIC)
+    public ChannelTopic topicStudent() {
+        return new ChannelTopic(redisTopic2);
+    }
+
+    @Bean(Names.ORDERTOPIC)
+    public ChannelTopic topicOrder() {
+        return new ChannelTopic(redisTopic3);
+    }
+
+    /*
+     * Create an adapter based on each topic available
+     * The adapters are distinguised based on their bean names
+     */
+
+    @Bean(Names.TODOADAPTER)
     public MessageListenerAdapter listenerAdapter(ConsumerService consumerService){
         MessageListenerAdapter listenerAdapter = new MessageListenerAdapter(consumerService);
         listenerAdapter.setSerializer(new Jackson2JsonRedisSerializer<>(Todo.class));
         return listenerAdapter;
     }
 
-    @Bean(Names.STUDENT)
-    public RedisTemplate<String, Student> redisTemplateStudent(RedisConnectionFactory connFac, 
-    Jackson2JsonRedisSerializer<Student> serializer){
-        RedisTemplate<String, Student> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connFac);
-        redisTemplate.setDefaultSerializer(serializer);
-        redisTemplate.afterPropertiesSet();
-
-        return redisTemplate;
-    }
-
-
-    @Bean
-    public RedisMessageListenerContainer listenerContainerStudent(@Qualifier(Names.STUDENTQUALIFIER) MessageListenerAdapter messageListenerAdapter,
-    RedisConnectionFactory connFac){
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connFac);
-        container.addMessageListener(messageListenerAdapter, new PatternTopic(redisTopic2));
-
-        return container;
-    }
-
-    @Bean(Names.STUDENTQUALIFIER)
+    @Bean(Names.STUDENTADAPTER)
     public MessageListenerAdapter listenerAdapterStudent(StudentService studentService){
-        // Adapter by default listens to the method handlemessage()
+        /*
+         * Must ensure that the class passed into new MessageListenerAdapter has the method handleMessage
+         * By default, the handleMessage method is searched and implemented by the Adapter
+         */
         MessageListenerAdapter listenerAdapter = new MessageListenerAdapter(studentService);
         listenerAdapter.setSerializer(new Jackson2JsonRedisSerializer<>(Student.class));
         return listenerAdapter;
     }
 
-    @Bean(Names.ORDER)
-    public RedisTemplate<String, Order> redisTemplateOrder(RedisConnectionFactory connFac, 
-    Jackson2JsonRedisSerializer<Order> serializer){
-        RedisTemplate<String, Order> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connFac);
-        redisTemplate.setDefaultSerializer(serializer);
-        redisTemplate.afterPropertiesSet();
-
-        return redisTemplate;
-    }
+    /*
+     * In the RedisMessageListenerContainer, the topic is set here
+     * If the method implements MessageListener interface, there is no need to create a MessageListenerAddapter
+     * Note when creating the container, we pass in the class OrderService directly without creating an adapter
+     * This is because orderService implements MessageListener
+     */
 
     @Bean
-    public ChannelTopic topic() {
-        return new ChannelTopic(redisTopic3);
-    }
-
-    @Bean(Names.ORDERQUALIFIER)
-    public MessageListenerAdapter messageListenerAdapter(OrderService orderService) {
-        MessageListenerAdapter listenerAdapter = new MessageListenerAdapter(orderService);
-        listenerAdapter.setSerializer(new Jackson2JsonRedisSerializer<>(Order.class));
-        return listenerAdapter;
-    }
-
-    @Bean
-    public RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory,OrderService orderService, ChannelTopic topic) {
+    public RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory, 
+    OrderService orderService, @Qualifier(Names.TODOADAPTER) MessageListenerAdapter todoAdapter, 
+    @Qualifier(Names.STUDENTADAPTER) MessageListenerAdapter studentAdapter, @Qualifier(Names.TODOTOPIC) ChannelTopic todoTopic,
+    @Qualifier(Names.STUDENTTOPIC) ChannelTopic studentTopic, @Qualifier(Names.ORDERTOPIC) ChannelTopic orderTopic) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory);
-        container.addMessageListener(orderService, topic);
+
+        container.addMessageListener(todoAdapter, todoTopic);
+        container.addMessageListener(studentAdapter, studentTopic);
+        container.addMessageListener(orderService, new PatternTopic(orderTopic.getTopic()));
+
         return container;
     }
     
