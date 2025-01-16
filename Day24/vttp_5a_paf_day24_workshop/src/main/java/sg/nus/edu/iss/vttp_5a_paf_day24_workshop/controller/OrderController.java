@@ -26,24 +26,14 @@ public class OrderController {
         ModelAndView mav = new ModelAndView("order");
         mav.addObject("order", new Order());
         mav.addObject("orderdetails1", new OrderDetails());
-        mav.addObject("orderdetails2", new OrderDetails());
         return mav;
     }
 
     @PostMapping("/submit")
-    public ModelAndView submitOrder(@Valid @ModelAttribute Order order, BindingResult orderBindingResult, 
-    @Valid @ModelAttribute OrderDetails orderDetails1, BindingResult orderDetails1BindingResult,
-    @Valid @ModelAttribute OrderDetails orderDetails2, BindingResult orderDetails2BindingResult){
+    public ModelAndView submitOrder(@ModelAttribute Order order, @ModelAttribute OrderDetails orderDetails1){
         ModelAndView mav = new ModelAndView();
-        if(orderBindingResult.hasErrors() || orderDetails1BindingResult.hasErrors() || orderDetails2BindingResult.hasErrors()){
-            mav.addObject("order", order);
-            mav.addObject("orderdetails1", orderDetails1);
-            mav.addObject("orderdetails2", orderDetails2);
-            mav.setViewName("order");
-        } else {
-            mav.setViewName("success");
-            orderService.insertDetails(order, orderDetails1);
-        }
+        mav.setViewName("success");
+        orderService.insertDetails(order, orderDetails1);
         
         return mav;
     }

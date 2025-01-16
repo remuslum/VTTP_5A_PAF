@@ -2,6 +2,8 @@ package sg.nus.edu.iss.vttp_5a_paf_day24_workshop.repo;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.time.LocalDate;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Repository;
 
 import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.Order;
 import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.OrderDetails;
+import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.exception.InvalidDateException;
+import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model.exception.InvalidValueException;
 import sg.nus.edu.iss.vttp_5a_paf_day24_workshop.util.Queries;
 
 @Repository
@@ -21,25 +25,50 @@ public class OrderRepo {
     private JdbcTemplate jdbcTemplate;
     
     public int insertOrder(Order order){
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        PreparedStatementCreator psc = (Connection con) -> {
-            PreparedStatement ps = con.prepareStatement(Queries.QUERY_TO_INSERT_INTO_ORDERS, new String[]{"id"});
-            // ps.setDate(1, order.getOrderDate());
-            ps.setString(2, order.getCustomerName());
-            ps.setString(3, order.getShipAddress());
-            ps.setString(4, order.getNotes());
-            return ps;
-        };
+        LocalDate orderDate = getOptional(order.getOrderDate());
+        String customerName = getOptional(order.getCustomerName());
+        String shipAddress = getOptional(order.getShipAddress());
+        String notes = getOptional(order.getNotes());
 
-        jdbcTemplate.update(psc, keyHolder);
-        int orderId = keyHolder.getKey().intValue();
-        return orderId;
+        if(orderDate.isAfter(LocalDate.now())){
+            throw new InvalidDateException(orderDate);
+        } else {
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            PreparedStatementCreator psc = (Connection con) -> {
+                PreparedStatement ps = con.prepareStatement(Queries.QUERY_TO_INSERT_INTO_ORDERS, new String[]{"id"});
+                ps.setString(1, orderDate.toString());
+                ps.setString(2, customerName);
+                ps.setString(3, shipAddress);
+                ps.setString(4, notes);
+                return ps;
+            };
+    
+            jdbcTemplate.update(psc, keyHolder);
+            int orderId = keyHolder.getKey().intValue();
+            return orderId;
+        }
     }
 
     public boolean addOrderAndOrderDetails(Order order, OrderDetails orderDetails){
         int orderId = insertOrder(order);
-        return jdbcTemplate.update(Queries.QUERY_TO_INSERT_INTO_ORDER_DETAILS, orderDetails.getProduct(),
-        orderDetails.getUnitPrice(), orderDetails.getDiscount(), orderDetails.getQuantity(),
-        orderId) > 0;
+        String product = getOptional(orderDetails.getProduct());
+        float unitPrice = getOptional(orderDetails.getUnitPrice());
+        float discount = getOptional(orderDetails.getDiscount());
+        int quantity = getOptional(orderDetails.getQuantity());
+
+        if(unitPrice <= 0.0){
+            throw new InvalidValueException(unitPrice);
+        } else if(discount < 0.0 || discount > 1.0){
+            throw new InvalidValueException(discount);
+        } else if (quantity < 0){
+            throw new InvalidValueException(quantity);
+        }
+
+        return jdbcTemplate.update(Queries.QUERY_TO_INSERT_INTO_ORDER_DETAILS, product,
+        unitPrice, discount, quantity, orderId) > 0;
+    }
+
+    private <T> T getOptional(T item){
+        return Optional.ofNullable(item).orElseThrow(() -> new InvalidValueException(item));
     }
 }

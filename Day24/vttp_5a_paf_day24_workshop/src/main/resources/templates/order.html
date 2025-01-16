@@ -65,29 +65,6 @@
                 </div>            
             </div>
 
-            <div class="mb-3" th:object="${orderdetails2}">
-                <h3>Order Details</h3>
-                <div>
-                    <label for="product" class="form-label">Product</label>
-                    <input type="text" class="form-control" id="product" th:field="*{product}">
-                    <span class="text-danger" th:if="${#fields.hasErrors('product')}" th:errors="*{product}"></span>
-                </div>
-                <div>
-                    <label for="unitPrice" class="form-label">Unit Price</label>
-                    <input type="number" class="form-control" id="unitPrice" step="0.1" th:field="*{unitPrice}">
-                    <span class="text-danger" th:if="${#fields.hasErrors('unitPrice')}" th:errors="*{unitPrice}"></span>
-                </div>
-                <div>
-                    <label for="discount" class="form-label">Discount</label>
-                    <input type="number" class="form-control" id="discount" step="0.01" th:field="*{discount}">
-                    <span class="text-danger" th:if="${#fields.hasErrors('discount')}" th:errors="*{discount}"></span>
-                </div>
-                <div>
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="text" class="form-control" id="quantity" step="1" th:field="*{quantity}">
-                    <span class="text-danger" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></span>
-                </div>
-            </div>
             <button class="btn btn-primary" type="submit">Submit</button>
         </form>
     </div>
