@@ -9,7 +9,7 @@ public class Queries {
 
     public static final String QUERY_TO_INSERT_INTO_ORDER_DETAILS =
     """
-        insert into order_details (product, unit_price, discount, quantity)
-        values (?,?,?,?)        
+        insert into order_details (product, unit_price, discount, quantity, order_id)
+        values (?,?,?,?,?)        
     """;
 }

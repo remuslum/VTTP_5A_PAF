@@ -1,6 +1,6 @@
 package sg.nus.edu.iss.vttp_5a_paf_day24_workshop.model;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Order {
     private int orderId;
-    private Date orderDate;
+    private LocalDate orderDate;
     private String customerName;
     private String shipAddress;
     private String notes;
