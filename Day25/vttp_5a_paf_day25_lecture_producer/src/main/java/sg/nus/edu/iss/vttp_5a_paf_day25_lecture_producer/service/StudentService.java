@@ -14,15 +14,22 @@ public class StudentService {
     
     @Autowired
     @Qualifier(Names.STUDENTTEMPLATE)
-    private RedisTemplate<String, Student> redisTemplate;
+    private RedisTemplate<String, Student> redisTemplateStudent;
+
+    @Autowired
+    @Qualifier(Names.STRINGTEMPLATE)
+    private RedisTemplate<String, String> redisTemplateString;
 
     @Autowired
     @Qualifier(Names.STUDENTTOPIC)
     private ChannelTopic channelTopic;
 
-    
     public long sendMessage(Student student){
-        return redisTemplate.convertAndSend(channelTopic.getTopic(), student);
+        return redisTemplateStudent.convertAndSend(channelTopic.getTopic(), student);
+    }
+
+    public long sendMessage(String string){
+        return redisTemplateString.convertAndSend(channelTopic.getTopic(), string);
     }
 }
 

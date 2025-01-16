@@ -31,7 +31,15 @@ public class ProducerController {
     @PostMapping("/todo")
     public ResponseEntity<String> sendMessage(@RequestBody Todo todo){
         long numClients = toDoService.sendMessage(todo);
-        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("Message sent", HttpStatus.OK);
+    }
+
+    @PostMapping("/todostring")
+    public ResponseEntity<String> sendMessageTodo(@RequestBody String todo){
+        long numClients = toDoService.sendMessage(todo);
         if(numClients < 1){
             return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
         }
@@ -41,7 +49,15 @@ public class ProducerController {
     @PostMapping("/student")
     public ResponseEntity<String> sendMessage(@RequestBody Student student){
         long numClients = studentService.sendMessage(student);
-        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("Message sent", HttpStatus.OK);
+    }
+
+    @PostMapping("/studentstring")
+    public ResponseEntity<String> sendMessage(@RequestBody String student){
+        long numClients = studentService.sendMessage(student);
         if(numClients < 1){
             return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
         }
@@ -51,8 +67,15 @@ public class ProducerController {
     @PostMapping("/order")
     public ResponseEntity<String> sendOrder(@RequestBody Order order){
         long numClients = orderService.publish(order);
-        System.out.println(order);
-        System.out.println(numClients);
+        if(numClients < 1){
+            return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("Message sent", HttpStatus.OK);
+    }
+
+    @PostMapping("/orderstring")
+    public ResponseEntity<String> sendOrder(@RequestBody String order){
+        long numClients = orderService.publish(order);
         if(numClients < 1){
             return new ResponseEntity<>("Sending failed", HttpStatus.BAD_REQUEST);
         }
