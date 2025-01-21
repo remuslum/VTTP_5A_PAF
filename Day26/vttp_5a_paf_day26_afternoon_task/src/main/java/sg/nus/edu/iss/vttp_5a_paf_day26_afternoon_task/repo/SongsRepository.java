@@ -39,5 +39,11 @@ public class SongsRepository {
 
         return songs;
     }
+
+    public List<Document> findSongDocument(int year){
+        Query query = Query.query(Criteria.where(F_YEAR).is(year));
+        query.fields().include("track_name", "artist(s)_name").exclude("_id");
+        return mongoTemplate.find(query, Document.class, C_NAME);
+    }
 }
 

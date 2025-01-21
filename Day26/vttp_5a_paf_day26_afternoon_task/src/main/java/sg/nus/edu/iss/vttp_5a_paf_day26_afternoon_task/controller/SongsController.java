@@ -36,4 +36,15 @@ public class SongsController {
         mav.addObject("songs", results);
         return mav;
     }
+
+    // @PostMapping("/songs")
+    // public ModelAndView findSongByYear(@RequestParam int year){
+    //     ModelAndView mav = new ModelAndView("documentpage");
+    //     List<Document> results = songsRepository.findSongDocument(year);
+    //     mav.addObject("documents", results);
+    //     mav.addObject("year", year);
+    //     return mav;
+    // }
+
+    
 }
