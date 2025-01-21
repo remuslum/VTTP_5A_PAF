@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.model.Song;
 import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.C_NAME;
+import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.F_ARTIST_NAME;
+import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.F_TRACK_NAME;
 import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.F_YEAR;
 
 @Repository
@@ -29,7 +31,7 @@ public class SongsRepository {
     
     public List<Song> findSongsByYear(int year){
         Query query = Query.query(Criteria.where(F_YEAR).is(year));
-        query.fields().include("track_name", "artist(s)_name").exclude("_id");
+        query.fields().include(F_TRACK_NAME, F_ARTIST_NAME).exclude("_id");
         List<Document> songDocuments = mongoTemplate.find(query, Document.class, C_NAME);
         List<Song> songs = new ArrayList<>();
 
@@ -42,7 +44,7 @@ public class SongsRepository {
 
     public List<Document> findSongDocument(int year){
         Query query = Query.query(Criteria.where(F_YEAR).is(year));
-        query.fields().include("track_name", "artist(s)_name").exclude("_id");
+        query.fields().include(F_TRACK_NAME, F_ARTIST_NAME).exclude("_id");
         return mongoTemplate.find(query, Document.class, C_NAME);
     }
 }

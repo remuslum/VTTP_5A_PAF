@@ -2,6 +2,9 @@ package sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.model;
 
 import org.bson.Document;
 
+import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.F_ARTIST_NAME;
+import static sg.nus.edu.iss.vttp_5a_paf_day26_afternoon_task.util.MongoConstants.F_TRACK_NAME;
+
 public class Song {
     private String trackName;
     private String artistName;
@@ -24,13 +27,13 @@ public class Song {
 
     public static Song createSongFromDocument(Document document){
         Song song = new Song();
-        Object trackName = document.get("track_name");
+        Object trackName = document.get(F_TRACK_NAME);
         if(!(trackName instanceof String)){
             song.setTrackName(String.valueOf(trackName));
         } else {
             song.setTrackName((String)trackName);
         }
-        song.setArtistName(document.getString("artist(s)_name"));
+        song.setArtistName(document.getString(F_ARTIST_NAME));
         return song;
     }
 

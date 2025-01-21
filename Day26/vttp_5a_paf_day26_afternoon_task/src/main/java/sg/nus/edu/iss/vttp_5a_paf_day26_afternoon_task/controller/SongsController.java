@@ -24,7 +24,6 @@ public class SongsController {
     public ModelAndView homepage(){
         ModelAndView mav = new ModelAndView("landingpage");
         mav.addObject("years", songsRepository.getAllYears());
-        System.out.println(songsRepository.getAllYears());
         return mav;
     }
 
