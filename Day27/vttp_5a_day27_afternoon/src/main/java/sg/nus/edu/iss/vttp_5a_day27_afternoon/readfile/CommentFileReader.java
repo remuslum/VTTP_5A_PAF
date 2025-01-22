@@ -1,5 +1,6 @@
 package sg.nus.edu.iss.vttp_5a_day27_afternoon.readfile;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,7 +18,7 @@ public class CommentFileReader {
 
     public JsonArray readFile(){
         try {
-            JsonReader reader = Json.createReader(new FileReader(fileName));
+            JsonReader reader = Json.createReader(new BufferedReader(new FileReader(fileName)));
             return reader.readArray();
         } catch (FileNotFoundException e) {
             return Json.createArrayBuilder().add("file not found").build();

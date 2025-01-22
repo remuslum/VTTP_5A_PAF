@@ -3,8 +3,9 @@ package sg.nus.edu.iss.vttp_5a_day27_afternoon.repo;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.TextIndexDefinition;
 import org.springframework.stereotype.Repository;
+
+import com.mongodb.client.model.Indexes;
 
 import jakarta.json.JsonArray;
 
@@ -26,6 +27,8 @@ public class CommentRepository {
     }
 
     private void insertIntoCollection(JsonArray data, String collectionName){
+        // JsonObject is immutable, Documents are mutable
+
         for(int i = 0; i < data.size(); i++){
             Document documentToInsert = Document.parse(data.getJsonObject(i).toString());
             mongoTemplate.insert(documentToInsert, collectionName);
@@ -33,10 +36,6 @@ public class CommentRepository {
     }
 
     private void createTextIndex(String collectionName, String fieldName){
-        TextIndexDefinition textIndex = new TextIndexDefinition.TextIndexDefinitionBuilder()
-            .onField(fieldName)
-            .build();
-
-        mongoTemplate.indexOps(collectionName).ensureIndex(textIndex);
+        mongoTemplate.getCollection(collectionName).createIndex(Indexes.text(fieldName));
     }
 }
