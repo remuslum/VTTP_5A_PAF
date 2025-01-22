@@ -80,7 +80,7 @@ public class TaskRepository {
 
         Update updateOps = new Update().set("duration","Five hours");
 
-        UpdateResult updateResult = mongoTemplate.updateMulti(query, updateOps, javax.swing.text.Document.class,C_NAME_TASKS);
+        UpdateResult updateResult = mongoTemplate.updateMulti(query, updateOps,Document.class,C_NAME_TASKS);
 
         System.out.printf(">>>>> updateResult: %d\n", updateResult.getModifiedCount());
     }
