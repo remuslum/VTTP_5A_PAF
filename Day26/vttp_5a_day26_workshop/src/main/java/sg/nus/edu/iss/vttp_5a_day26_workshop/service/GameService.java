@@ -51,9 +51,8 @@ public class GameService {
         Document game = gameRepo.getGame(gameId).orElse(new Document("message", "Game not found"));
         if(!game.containsKey("message")){
             ObjectId objectId = game.getObjectId(COLUMN_ID);
-            game.put(COLUMN_ID, objectId.toHexString());
-            game.put(THUMBNAIL, game.getString(COLUMN_GAME_IMAGE));
-            game.put(TIMESTAMP, LocalDateTime.now().toString());
+            game.append(COLUMN_ID, objectId.toHexString()).append(THUMBNAIL, game.getString(COLUMN_GAME_IMAGE)
+            ).append(TIMESTAMP, LocalDateTime.now().toString());
             game.remove(COLUMN_GAME_IMAGE);
         }
         return Json.createReader(new StringReader(game.toJson())).readObject();
