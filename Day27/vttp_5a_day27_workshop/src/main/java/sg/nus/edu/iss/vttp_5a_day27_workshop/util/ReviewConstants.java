@@ -1,6 +1,7 @@
 package sg.nus.edu.iss.vttp_5a_day27_workshop.util;
 
 public class ReviewConstants {
+    public static final String RATING_OBJECT_ID_KEY="_id";
     public static final String USER_KEY="user";
     public static final String RATING_KEY="rating";
     public static final String COMMENT_KEY="comment";

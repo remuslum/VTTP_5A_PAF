@@ -50,9 +50,14 @@ public class ReviewRestController {
         ResponseEntity.status(HttpStatusCode.valueOf(404)).body("Unsuccessful update");
     }
 
-    @GetMapping(path="/{review-id}")
+    @GetMapping(path="/{review-id}/history", produces="application/json")
+    public ResponseEntity<String> findReviewWithHistory(@PathVariable("review-id") int reviewId){
+        return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(reviewService.getReviewWithHistory(reviewId).toString());
+    }
+
+    @GetMapping(path="/{review-id}", produces="application/json")
     public ResponseEntity<String> findReview(@PathVariable("review-id") int reviewId){
-        return ResponseEntity.ok().body(" ");
+        return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(reviewService.getReview(reviewId).toString());
     }
 
 }
