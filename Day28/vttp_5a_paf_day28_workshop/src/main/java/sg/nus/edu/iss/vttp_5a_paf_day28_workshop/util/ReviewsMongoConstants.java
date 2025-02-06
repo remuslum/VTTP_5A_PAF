@@ -7,6 +7,10 @@ public class ReviewsMongoConstants {
 
     public static final String F_REVIEW_GAME_ID="ID";
     public static final String F_REVIEW_RATING=F_REVIEWS + ".rating";
+    public static final String F_REVIEW_USER="user";
+    public static final String F_RATING="rating";
+    public static final String F_REVIEWS_MAX_RATING="maxRating";
+    public static final String F_REVIEWS_MIN_RATING="minRating";
 
     public static final String F_AVERAGE_RATING="average";
 }

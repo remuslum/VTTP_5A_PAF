@@ -29,8 +29,12 @@ import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_YEAR;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.C_REVIEWS;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_AVERAGE_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MAX_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MIN_RATING;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_GAME_ID;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_USER;
 
 @Repository
 public class BoardGameRepo {
@@ -107,5 +111,66 @@ public class BoardGameRepo {
 
         Aggregation aggregation = Aggregation.newAggregation(matchOperation, lookupOperation, unwindOperation, groupOperation);
         return mongoTemplate.aggregate(aggregation, C_GAMES, Document.class).getMappedResults();
+    }
+
+    // db.reviews.aggregate([{
+    //     $match : {
+    //         user : {
+    //             $regex : 'rem', $options : 'i'
+    //             },
+    //         rating : 8
+    //         }
+    //     }, {
+    //         $lookup : {
+    //             from : 'games',
+    //             localField : 'ID',
+    //             foreignField : 'gid',
+    //             as : 'games'
+    //         }
+    //     }, {
+    //         $project : {
+    //             games : 1,
+    //             _id : 0
+    //         }
+    //     }
+    // ])
+    public List<Document> getGames(String user, int rating){
+        MatchOperation matchUser = Aggregation.match(Criteria.where(F_REVIEW_USER).is(user));
+        MatchOperation matchRating = Aggregation.match(Criteria.where(F_RATING).is(rating));
+
+        LookupOperation lookupFromGames = Aggregation.lookup(C_GAMES, F_REVIEW_GAME_ID, F_GAME_ID, C_GAMES);
+
+        ProjectionOperation projectionOperation = Aggregation.project(C_GAMES).andExclude(F_ID);
+
+        Aggregation aggregation = Aggregation.newAggregation(matchUser, matchRating, lookupFromGames, projectionOperation);
+        return mongoTemplate.aggregate(aggregation, C_REVIEWS, Document.class).getMappedResults();
+    }
+
+    // db.reviews.aggregate([
+    //     {
+    //         $match : {
+    //             user : {
+    //                 $regex : <user>, $options : 'i'
+    //             }
+    //         }
+    //     }, {
+    //         $group : {
+    //             _id:'$user',
+    //             maxRating:{
+    //                 $max : '$rating'
+    //             },
+    //             minRating:{
+    //                 $min : '$rating'
+    //             }
+    //         }
+    //     }
+    // ])
+    public Document getHighestAndLowestGameRating(String user){
+        MatchOperation matchUser = Aggregation.match(Criteria.where(F_REVIEW_USER).regex(user, "i"));
+        GroupOperation groupOperation = Aggregation.group(F_REVIEW_USER).max(F_RATING).as(F_REVIEWS_MAX_RATING).min(F_RATING).as(F_REVIEWS_MIN_RATING);
+        Aggregation aggregation = Aggregation.newAggregation(matchUser, groupOperation);
+
+        List<Document> results = mongoTemplate.aggregate(aggregation, C_REVIEWS, Document.class).getMappedResults();
+        return results.get(0);
     }
 }

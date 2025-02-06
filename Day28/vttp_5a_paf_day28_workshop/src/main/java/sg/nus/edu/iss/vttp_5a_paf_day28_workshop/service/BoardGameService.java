@@ -2,6 +2,7 @@ package sg.nus.edu.iss.vttp_5a_paf_day28_workshop.service;
 
 import java.io.StringReader;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
 import sg.nus.edu.iss.vttp_5a_paf_day28_workshop.repositories.BoardGameRepo;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.C_GAMES;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_GAME_ID_RENAMED;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_IMAGE_RENAMED;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_NAME;
@@ -20,6 +22,8 @@ import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_USERS_RATED;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_YEAR;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_AVERAGE_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MAX_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MIN_RATING;
 
 @Service
 public class BoardGameService {
@@ -49,5 +53,32 @@ public class BoardGameService {
         .add(F_REVIEWS, reviewsArray.build()).add(TIMESTAMP, LocalDateTime.now().toString());
 
         return objectBuilder.build().toString();
+    }
+
+    public String getHighestGamesInfo(String user, String rating){
+        List<Document> gameInfo = boardGameRepo.getGames(user, boardGameRepo.getHighestAndLowestGameRating(user).getInteger(F_REVIEWS_MAX_RATING));
+        return getResponse(gameInfo, rating);
+    }
+
+    public String getLowestGamesInfo(String user, String rating){
+        List<Document> gameInfo = boardGameRepo.getGames(user, boardGameRepo.getHighestAndLowestGameRating(user).getInteger(F_REVIEWS_MIN_RATING));
+        return getResponse(gameInfo, rating);
+    }
+
+    private String getResponse(List<Document> gameInfo, String rating){
+        JsonObjectBuilder response = Json.createObjectBuilder();
+        response.add("rating", rating);
+
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        gameInfo.forEach(g -> {
+            List<Document> docs = g.getList(C_GAMES, Document.class);
+            docs.forEach( d -> {
+                arrayBuilder.add(Json.createReader(new StringReader(d.toJson())).readObject());
+            });
+        });
+
+        response.add("games", arrayBuilder.build());
+        response.add("timestamp", LocalDateTime.now().toString());
+        return response.build().toString();
     }
 }
