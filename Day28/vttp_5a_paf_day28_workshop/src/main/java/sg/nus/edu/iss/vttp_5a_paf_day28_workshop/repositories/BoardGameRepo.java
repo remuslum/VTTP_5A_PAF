@@ -4,12 +4,16 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
@@ -29,15 +33,20 @@ import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.GamesMongoConstants.F_YEAR;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.C_REVIEWS;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_AVERAGE_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_COMMENT;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_MAX_RATING;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_MIN_RATING;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_RATING;
-import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MAX_RATING;
-import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEWS_MIN_RATING;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_GAME_ID;
+import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_ID;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_RATING;
 import static sg.nus.edu.iss.vttp_5a_paf_day28_workshop.util.ReviewsMongoConstants.F_REVIEW_USER;
 
 @Repository
 public class BoardGameRepo {
+
+    private static final String DOLLAR_SIGN="$";
+    private static final String FULL_STOP=".";
     
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -146,31 +155,103 @@ public class BoardGameRepo {
         return mongoTemplate.aggregate(aggregation, C_REVIEWS, Document.class).getMappedResults();
     }
 
-    // db.reviews.aggregate([
+    //     db.getCollection("games").aggregate([
     //     {
-    //         $match : {
-    //             user : {
-    //                 $regex : <user>, $options : 'i'
+    //         $lookup : {
+    //             from : "reviews",
+    //             localField : "gid",
+    //             foreignField : "ID",
+    //             as : "reviews",
+    //             pipeline :[{
+    //                 $sort : {
+    //                     rating : -1
+    //                     }
+    //                 }   
+    //             ]
+    //         }
+    //     },{
+    //         $addFields: {
+    //             maxRating: { $max: "$reviews.rating" }
+    //         }
+    //     },
+    //     {
+    //         $set: {
+    //             reviews: {
+    //                 $filter: {
+    //                     input: "$reviews",
+    //                     as: "review",
+    //                     cond: { $eq: ["$$review.rating", "$maxRating"] }
+    //                 }
     //             }
     //         }
-    //     }, {
+    //     },
+    //     {
+    //         $unwind : "$reviews"
+    //     },{
     //         $group : {
-    //             _id:'$user',
-    //             maxRating:{
-    //                 $max : '$rating'
-    //             },
-    //             minRating:{
-    //                 $min : '$rating'
+    //             _id:"$gid",
+    //             games: {
+    //                 $push : {
+    //                     _id : "$gid",
+    //                     name : "$name",
+    //                     rating : "$reviews.rating",
+    //                     user : "$reviews.user",
+    //                     comment : "$reviews.comment",
+    //                     review_id:"$reviews._id"
+    //                 }
+                    
     //             }
     //         }
     //     }
     // ])
-    public Document getHighestAndLowestGameRating(String user){
-        MatchOperation matchUser = Aggregation.match(Criteria.where(F_REVIEW_USER).regex(user, "i"));
-        GroupOperation groupOperation = Aggregation.group(F_REVIEW_USER).max(F_RATING).as(F_REVIEWS_MAX_RATING).min(F_RATING).as(F_REVIEWS_MIN_RATING);
-        Aggregation aggregation = Aggregation.newAggregation(matchUser, groupOperation);
+    public List<Document> getHighestRatedComments(){
+        LookupOperation lookupOperation = Aggregation.lookup(C_REVIEWS, F_GAME_ID, F_REVIEW_GAME_ID, C_REVIEWS);
+        SortOperation sortbyRating = Aggregation.sort(Sort.Direction.DESC,F_REVIEW_RATING);
+        AddFieldsOperation addMaxRating = Aggregation.addFields().addFieldWithValue(F_MAX_RATING, new Document("$max","$reviews.rating")).build();
+        // context is a parameter that provides the current aggregation context and is used to manipulate fields or query references in the aggregation pipeline.
+        // In this case, it’s not explicitly used, but it's part of the interface that allows for further customization.
+         AggregationOperation filterMaxRating = context -> new Document("$set",
+                new Document("reviews",
+                        new Document("$filter",
+                                new Document("input", "$reviews")
+                                        .append("as", "review")
+                                        .append("cond", new Document("$eq", List.of("$$review.rating", "$maxRating")))
+                        )
+                )
+        );
+        UnwindOperation unwindOperation = Aggregation.unwind(C_REVIEWS);
+        GroupOperation groupOperation = Aggregation.group(F_ID).push(new Document().append(F_NAME,DOLLAR_SIGN+F_NAME).append(F_RATING, DOLLAR_SIGN+F_REVIEW_RATING)
+        .append(F_REVIEW_USER,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_REVIEW_USER).append(F_REVIEW_ID,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_ID)
+        .append(F_COMMENT,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_COMMENT)).as(C_GAMES);
 
-        List<Document> results = mongoTemplate.aggregate(aggregation, C_REVIEWS, Document.class).getMappedResults();
-        return results.get(0);
+        Aggregation aggregationOperation = Aggregation.newAggregation(lookupOperation,sortbyRating,addMaxRating,filterMaxRating,unwindOperation,
+        groupOperation);
+
+        return mongoTemplate.aggregate(aggregationOperation, C_GAMES, Document.class).getMappedResults();
+    }
+
+    public List<Document> getLowestRatedComments(){
+        LookupOperation lookupOperation = Aggregation.lookup(C_REVIEWS, F_GAME_ID, F_REVIEW_GAME_ID, C_REVIEWS);
+        SortOperation sortbyRating = Aggregation.sort(Sort.Direction.ASC,F_REVIEW_RATING);
+        AddFieldsOperation addMaxRating = Aggregation.addFields().addFieldWithValue(F_MIN_RATING, new Document("$min","$reviews.rating")).build();
+
+         AggregationOperation filterMaxRating = context -> new Document("$set",
+                new Document("reviews",
+                        new Document("$filter",
+                                new Document("input", "$reviews")
+                                        .append("as", "review")
+                                        .append("cond", new Document("$eq", List.of("$$review.rating", "$minRating")))
+                        )
+                )
+        );
+        UnwindOperation unwindOperation = Aggregation.unwind(C_REVIEWS);
+        GroupOperation groupOperation = Aggregation.group(F_ID).push(new Document().append(F_NAME,DOLLAR_SIGN+F_NAME).append(F_RATING, DOLLAR_SIGN+F_REVIEW_RATING)
+        .append(F_REVIEW_USER,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_REVIEW_USER).append(F_REVIEW_ID,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_ID)
+        .append(F_COMMENT,DOLLAR_SIGN+C_REVIEWS+FULL_STOP+F_COMMENT)).as(C_GAMES);
+
+        Aggregation aggregationOperation = Aggregation.newAggregation(lookupOperation,sortbyRating,addMaxRating,filterMaxRating,unwindOperation,
+        groupOperation);
+
+        return mongoTemplate.aggregate(aggregationOperation, C_GAMES, Document.class).getMappedResults();
     }
 }

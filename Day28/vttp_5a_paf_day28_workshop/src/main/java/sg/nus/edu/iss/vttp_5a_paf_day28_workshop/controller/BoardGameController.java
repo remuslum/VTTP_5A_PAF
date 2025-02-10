@@ -1,17 +1,12 @@
 package sg.nus.edu.iss.vttp_5a_paf_day28_workshop.controller;
 
-import java.io.StringReader;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import sg.nus.edu.iss.vttp_5a_paf_day28_workshop.service.BoardGameService;
 
 @RestController
@@ -27,14 +22,12 @@ public class BoardGameController {
     }
 
     @GetMapping(path="/games/highest", consumes="application/json", produces="application/json")
-    public ResponseEntity<String> getHighestRatingGames(@RequestBody String payload){
-        JsonObject jsonObject = Json.createReader(new StringReader(payload)).readObject();
-        return ResponseEntity.ok(boardGameService.getHighestGamesInfo(jsonObject.getString("user"), jsonObject.getString("rating")));
+    public ResponseEntity<String> getHighestRatingGames(){
+        return ResponseEntity.ok(boardGameService.getHighestDocuments());
     }
 
     @GetMapping(path="/games/lowest", consumes="application/json", produces="application/json")
-    public ResponseEntity<String> getLowestRatingGames(@RequestBody String payload){
-        JsonObject jsonObject = Json.createReader(new StringReader(payload)).readObject();
-        return ResponseEntity.ok(boardGameService.getLowestGamesInfo(jsonObject.getString("user"), jsonObject.getString("rating")));
+    public ResponseEntity<String> getLowestRatingGames(){
+        return ResponseEntity.ok(boardGameService.getLowestDocuments());
     }
 }
