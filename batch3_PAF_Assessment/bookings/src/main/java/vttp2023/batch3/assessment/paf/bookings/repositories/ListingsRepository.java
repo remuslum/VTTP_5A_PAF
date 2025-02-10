@@ -51,7 +51,7 @@ public class ListingsRepository {
 		Query query = Query.query(Criteria.where(F_OBJECT_ID).is(objectId));
 		query.fields().include(F_OBJECT_ID, F_DESCRIPTION, F_ADDRESS, F_IMAGES, F_PRICE, F_AMENITIES, F_NAME);
 
-		return mongoTemplate.findOne(query, Document.class);
+		return mongoTemplate.findOne(query, Document.class, C_LISTINGS);
 	}
 
 	//TODO: Task 5

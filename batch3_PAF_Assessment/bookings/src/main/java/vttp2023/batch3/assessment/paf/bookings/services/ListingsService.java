@@ -1,17 +1,22 @@
 package vttp2023.batch3.assessment.paf.bookings.services;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mongodb.client.DistinctIterable;
 
 import vttp2023.batch3.assessment.paf.bookings.models.Listing;
 import vttp2023.batch3.assessment.paf.bookings.models.ListingDetails;
+import vttp2023.batch3.assessment.paf.bookings.models.ListingList;
+import vttp2023.batch3.assessment.paf.bookings.models.exceptions.InvalidValueException;
 import vttp2023.batch3.assessment.paf.bookings.repositories.ListingsRepository;
+import vttp2023.batch3.assessment.paf.bookings.repositories.ReservationRepository;
 import static vttp2023.batch3.assessment.paf.bookings.util.ListingsMongo.F_ADDRESS;
 import static vttp2023.batch3.assessment.paf.bookings.util.ListingsMongo.F_AMENITIES;
 import static vttp2023.batch3.assessment.paf.bookings.util.ListingsMongo.F_DESCRIPTION;
@@ -25,6 +30,9 @@ import static vttp2023.batch3.assessment.paf.bookings.util.ListingsMongo.F_PRICE
 public class ListingsService {
 	@Autowired
 	private ListingsRepository listingsRepository;
+
+	@Autowired
+	private ReservationRepository reservationRepository;
 
 	private Document extractEmbeddedDocument(String field, Document document){
 		return document.get(field, Document.class);
@@ -58,13 +66,13 @@ public class ListingsService {
 	}
 	
 	//TODO: Task 3
-	public List<Listing> findListing(String country, int numOfPeople, double lowerPrice, double higherPrice){
+	public ListingList findListing(String country, int numOfPeople, double lowerPrice, double higherPrice){
 		List<Document> listingsDocument = listingsRepository.findListings(country, numOfPeople, lowerPrice, higherPrice);
 		List<Listing> listingsList = new ArrayList<>();
 		listingsDocument.forEach(d -> {
 			listingsList.add(Listing.createListing(d.getString(F_OBJECT_ID),d.getString(F_NAME), d.getDouble(F_PRICE), extractImageUrl(d)));
 		});
-		return listingsList;
+		return new ListingList(listingsList);
 	}
 
 	//TODO: Task 4
@@ -76,6 +84,15 @@ public class ListingsService {
 	}
 
 	//TODO: Task 5
-
+	@Transactional
+	public boolean insertReservationAndUpdateVacancy(String reservationId, String accountId, String name, String email, LocalDate arrivalDate, int duration){
+		int vacancy = reservationRepository.getVacancy(accountId);
+		if(duration > vacancy){
+			throw new InvalidValueException("The vacancy of this accomodation is limited to %d".formatted(vacancy));
+		} else {
+			return reservationRepository.makeReservation(reservationId,accountId, name, email, arrivalDate, duration) &&
+			reservationRepository.updateVacancy(accountId, duration, vacancy);
+		}
+	}
 
 }
