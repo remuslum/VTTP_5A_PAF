@@ -19,8 +19,8 @@ WORKDIR /app
 COPY --from=builder /src/target/assessment-0.0.1-SNAPSHOT.jar app.jar
 
 ENV PORT=8080
-ENV SPRING_DATASOURCE_URL=jdbc:mysql://fred:fred@host.docker.internal:3306/bedandbreakfast
-ENV SPRING_DATA_MONGODB_URI=mongodb+srv://fred:fred@cluster0.fvbco.mongodb.net/bedandbreakfast?retryWrites=true&w=majority&appName=Cluster0
+ENV SPRING_DATASOURCE_URL=
+ENV SPRING_DATA_MONGODB_URI=
 
 EXPOSE ${PORT}
 
